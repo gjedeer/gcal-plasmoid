@@ -12,5 +12,5 @@ X-KDE-PluginInfo-Email=gdr@go2.pl
 X-KDE-PluginInfo-Name=gcal-plasmoid
 X-KDE-PluginInfo-Version=0.1
 X-KDE-PluginInfo-Website=http://github.com/gjedeer/gcal-plasmoid
-X-KDE-PluginInfo-Depends=
+X-KDE-PluginInfo-Depends=python-vobject
 X-KDE-PluginInfo-License=LGPL
