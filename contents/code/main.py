@@ -27,11 +27,9 @@ class GoogleAgendaApplet(plasmascript.Applet):
         self.setHasConfigurationInterface(False)
         self.fetchData()
 
-        self.list = QGraphicsLinearLayout(Qt.Vertical, self.applet)
-        self.applet.setLayout(self.list)
-
         # in miliseconds
-        self.startTimer(1000 * 60)
+        self.startTimer(1000 * 5)
+        self.list = None
 
         self.displayData()
 
@@ -78,8 +76,20 @@ class GoogleAgendaApplet(plasmascript.Applet):
         self.items = rv
                     
     def displayData(self):
-        for i in range(self.list.count()):
-            self.list.removeAt(0)
+        oldlist = None
+        if self.list:
+            oldlist = self.list
+            for i in range(oldlist.count()):
+                item = oldlist.itemAt(0)
+                oldlist.removeAt(0)
+                del item
+
+        self.list = QGraphicsLinearLayout(Qt.Vertical, self.applet)
+        self.applet.setLayout(self.list)
+
+        if oldlist:
+            del oldlist
+
         last_date = None
         for item in self.items:
             if item['date'] != last_date:
