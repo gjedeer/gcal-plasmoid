@@ -11,7 +11,9 @@ import datetime
 from icalendar import Calendar, Event
 from localtz import LocalTimezone
 
-url = "http://www.google.com/calendar/ical/gjedeer%40gmail.com/private-95b1577f5087910771796a5de667a7a5/basic.ics"
+urls = ["http://www.google.com/calendar/ical/gjedeer%40gmail.com/private-95b1577f5087910771796a5de667a7a5/basic.ics",
+        "https://www.google.com/calendar/ical/andrzej%40godziuk.pl/private-c63abe7e31ec4d763234424770d23dda/basic.ics",
+       ]
 items = []
 error = None
 
@@ -28,7 +30,7 @@ class GoogleAgendaApplet(plasmascript.Applet):
         self.fetchData()
 
         # in miliseconds
-        self.startTimer(1000 * 5)
+        self.startTimer(1000 * 60)
         self.list = None
 
         self.displayData()
@@ -36,41 +38,41 @@ class GoogleAgendaApplet(plasmascript.Applet):
     def fetchData(self):
         global items
         global error
-        try:
-            rv = []
-            fical = urllib2.urlopen(url)
-            for event in Calendar.from_string(fical.read()).walk():
-                if type(event) is Event:
-                    dt = None
-                    add = False
-                    if type(event['DTSTART'].dt) is datetime.date:
-                            dt = datetime.datetime.combine(event['DTSTART'].dt, datetime.time.min)
-                            dt = dt.replace(tzinfo=LocalTimezone())
-                            date = event['DTSTART'].dt
-                            time = None
-
-                    if type(event['DTSTART'].dt) is datetime.datetime:
-                            dt = event['DTSTART'].dt
-                            if dt.tzname():
-                                dt = dt.astimezone(LocalTimezone())
-                            else:
+        rv = []
+        for url in urls:
+            try:
+                fical = urllib2.urlopen(url)
+                for event in Calendar.from_string(fical.read()).walk():
+                    if type(event) is Event:
+                        dt = None
+                        add = False
+                        if type(event['DTSTART'].dt) is datetime.date:
+                                dt = datetime.datetime.combine(event['DTSTART'].dt, datetime.time.min)
                                 dt = dt.replace(tzinfo=LocalTimezone())
-                            date = dt.date()
-                            time = dt.timetz()
+                                date = event['DTSTART'].dt
+                                time = None
 
-                    if date > datetime.date.today():
-                        rv.append({
-                            'dt': dt,
-                            'date': date,
-                            'time': time,
-                            'summary': unicode(event['SUMMARY']),
-                        })
-                        
-            self.error = None
-                        
-        except urllib2.HTTPError, e:
-            rv = []
-            self.error = str(e)
+                        if type(event['DTSTART'].dt) is datetime.datetime:
+                                dt = event['DTSTART'].dt
+                                if dt.tzname():
+                                    dt = dt.astimezone(LocalTimezone())
+                                else:
+                                    dt = dt.replace(tzinfo=LocalTimezone())
+                                date = dt.date()
+                                time = dt.timetz()
+
+                        if date >= datetime.date.today():
+                            rv.append({
+                                'dt': dt,
+                                'date': date,
+                                'time': time,
+                                'summary': unicode(event['SUMMARY']),
+                            })
+                            
+                self.error = None
+                            
+            except urllib2.HTTPError, e:
+                self.error = str(e)
 
         rv.sort(key=lambda row: row['dt'])
         self.items = rv
