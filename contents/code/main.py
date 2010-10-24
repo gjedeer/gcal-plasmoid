@@ -2,8 +2,10 @@
 # vim: set fileencoding=utf-8 :
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
+from PyQt4 import uic
 from PyKDE4.plasma import Plasma
 from PyKDE4 import plasmascript
+from PyKDE4.kdecore import KConfig, KConfigGroup
 
 import urllib2
 import datetime
@@ -11,33 +13,53 @@ import datetime
 from icalendar import Calendar, Event
 from localtz import LocalTimezone
 
-urls = ["http://www.google.com/calendar/ical/gjedeer%40gmail.com/private-95b1577f5087910771796a5de667a7a5/basic.ics",
-        "https://www.google.com/calendar/ical/andrzej%40godziuk.pl/private-c63abe7e31ec4d763234424770d23dda/basic.ics",
-       ]
 items = []
-error = None
 
 class GoogleAgendaApplet(plasmascript.Applet):
     def __init__(self,parent,args=None):
         plasmascript.Applet.__init__(self,parent)
         self.items = []
+        self.interval = 1   # minutes
+        self.max_events = 10
+        self.urls = []
  
     def init(self):
+        self.general_config = self.config("General")
+#        self.toGeneralConfig()
+        self.fromGeneralConfig()
         self.resize(200, 200)
         self.setAspectRatioMode(Plasma.IgnoreAspectRatio)
-        # No configuration interface supported
-        self.setHasConfigurationInterface(False)
+        self.setHasConfigurationInterface(True)
         self.fetchData()
 
         # in miliseconds
-        self.startTimer(1000 * 60)
+        self.startTimer(1000 * 60 * self.interval)
         self.list = None
 
         self.displayData()
 
+    def configChanged(self):
+        self.fromGeneralConfig()
+        plasmascript.Applet.configChanged(self)
+        self.displayData()
+        self.update()
+
+    def fromGeneralConfig(self):
+        self.interval, success = self.general_config.readEntry("interval", 1).toInt()
+        self.max_events, success = self.general_config.readEntry("max_events", 10).toInt()
+        qurls = self.general_config.readEntry("urls", QStringList(QString("http://www.mozilla.org/projects/calendar/caldata/PolishHolidays.ics"))).toStringList()
+        self.urls = [str(x) for x in qurls]
+
+    def toGeneralConfig(self):
+        qurls = QStringList()
+        for url in urls:
+            qurls.append(QString(url))
+
+        self.general_config.writeEntry("urls", qurls)
+        
+
     def fetchData(self):
         global items
-        global error
         rv = []
         for url in urls:
             try:
@@ -73,6 +95,7 @@ class GoogleAgendaApplet(plasmascript.Applet):
                             
             except urllib2.HTTPError, e:
                 self.error = str(e)
+                print self.error
 
         rv.sort(key=lambda row: row['dt'])
         self.items = rv
@@ -93,6 +116,7 @@ class GoogleAgendaApplet(plasmascript.Applet):
             del oldlist
 
         last_date = None
+        num_events = 0
         for item in self.items:
             if item['date'] != last_date:
                 last_date = item['date']
@@ -115,10 +139,16 @@ class GoogleAgendaApplet(plasmascript.Applet):
             summaryLabel.setText(summary)
             self.list.addItem(summaryLabel)
 
+            num_events += 1
+            if self.max_events > 0 and num_events >= self.max_events:
+                break
+            
+
     def timerEvent(self, event):
         self.fetchData()
         self.displayData()
         self.update()
+
  
 #    def paintInterface(self, painter, option, rect):
 #        painter.save()

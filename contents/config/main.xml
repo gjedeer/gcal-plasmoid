@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kcfg xmlns="http://www.kde.org/standards/kcfg/1.0"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://www.kde.org/standards/kcfg/1.0
+                          http://www.kde.org/standards/kcfg/1.0/kcfg.xsd" >
+  <kcfgfile name="gcal-plasmoid"/>
+  <include>kglobalsettings.h</include>
+  <group name="General">
+    <entry name="urls" type="StringList">
+      <label>List of URLs in the iCal format</label>
+    </entry>
+    <entry name="interval" type="Int">
+      <label>Refresh interval</label>
+      <min>1</min>
+      <default>1</default>
+    </entry>
+    <entry name="max_events" type="Int">
+      <label>Max number of displayed events, 0 = unlimited</label>
+      <default>10</default>
+      <min>0</min>
+    </entry>
+  </group>
+</kcfg>
