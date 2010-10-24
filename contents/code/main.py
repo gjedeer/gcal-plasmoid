@@ -67,7 +67,7 @@ class GoogleAgendaApplet(plasmascript.Applet):
 #unused
     def toGeneralConfig(self):
         qurls = QStringList()
-        for url in urls:
+        for url in self.urls:
             qurls.append(QString(url))
 
         self.general_config.writeEntry("urls", qurls)
@@ -79,7 +79,7 @@ class GoogleAgendaApplet(plasmascript.Applet):
         On communication error, sets self.error
         """
         rv = []
-        for url in urls:
+        for url in self.urls:
             try:
                 fical = urllib2.urlopen(url)
                 for event in Calendar.from_string(fical.read()).walk():
