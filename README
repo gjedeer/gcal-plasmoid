@@ -1,3 +1,5 @@
+This plasmoid shows a list of future tasks in Google Calendar (agenda). It's mostly inspired by Android widgets. It differs from other gcal applications because it's not a frame displaying GCal Mobile. It supports arbitrary number of calendars and chances are that it also supports other online calendars as long as they export iCal.
+
 This plasmoid is licensed under beerware license, http://en.wikipedia.org/wiki/Beerware
 
 This is a plasmoid written in Python
