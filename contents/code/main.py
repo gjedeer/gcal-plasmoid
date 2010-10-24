@@ -18,12 +18,19 @@ items = []
 class GoogleAgendaApplet(plasmascript.Applet):
     def __init__(self,parent,args=None):
         plasmascript.Applet.__init__(self,parent)
+        # List of all events sorted by date, populated in fetchData()
         self.items = []
-        self.interval = 1   # minutes
+        # Refresh interval, in minutes
+        self.interval = 1
+        # Max number of displayed events, 0 for unlimited
         self.max_events = 10
+        # iCal calendar URLs
         self.urls = []
  
     def init(self):
+        """
+        Called by Plasma upon initialization
+        """
         self.general_config = self.config("General")
 #        self.toGeneralConfig()
         self.fromGeneralConfig()
@@ -39,17 +46,25 @@ class GoogleAgendaApplet(plasmascript.Applet):
         self.displayData()
 
     def configChanged(self):
+        """
+        Config has been changed - refresh display
+        Inherited from plasmascript.Applet
+        """
         self.fromGeneralConfig()
         plasmascript.Applet.configChanged(self)
         self.displayData()
         self.update()
 
     def fromGeneralConfig(self):
+        """
+        Get values from plasma config and store in properties
+        """
         self.interval, success = self.general_config.readEntry("interval", 1).toInt()
         self.max_events, success = self.general_config.readEntry("max_events", 10).toInt()
         qurls = self.general_config.readEntry("urls", QStringList(QString("http://www.mozilla.org/projects/calendar/caldata/PolishHolidays.ics"))).toStringList()
         self.urls = [str(x) for x in qurls]
 
+#unused
     def toGeneralConfig(self):
         qurls = QStringList()
         for url in urls:
@@ -59,7 +74,10 @@ class GoogleAgendaApplet(plasmascript.Applet):
         
 
     def fetchData(self):
-        global items
+        """
+        Fetch data from ical files, parse them and insert into self.items
+        On communication error, sets self.error
+        """
         rv = []
         for url in urls:
             try:
@@ -101,6 +119,11 @@ class GoogleAgendaApplet(plasmascript.Applet):
         self.items = rv
                     
     def displayData(self):
+        """
+        Display data from self.items on screen
+        """
+
+        # Remove old labels from layout
         oldlist = None
         if self.list:
             oldlist = self.list
@@ -115,10 +138,14 @@ class GoogleAgendaApplet(plasmascript.Applet):
         if oldlist:
             del oldlist
 
+        # Holds last event date so we know when to insert date header
         last_date = None
+        # Counter of displayed events
         num_events = 0
+
         for item in self.items:
             if item['date'] != last_date:
+                # Insert date header
                 last_date = item['date']
                 strDate = item['date'].strftime('%d %B %Y')
                 dateLabel = Plasma.Label(self.applet)
@@ -130,6 +157,7 @@ class GoogleAgendaApplet(plasmascript.Applet):
                                         """)
                 self.list.addItem(dateLabel)
 
+            # Prepare label with event text
             summary = ''
             if item['time']:
                 summary += item['dt'].strftime('%H:%M')
@@ -145,6 +173,9 @@ class GoogleAgendaApplet(plasmascript.Applet):
             
 
     def timerEvent(self, event):
+        """
+        Called by timer every self.interval minutes
+        """
         self.fetchData()
         self.displayData()
         self.update()
