@@ -80,8 +80,10 @@ class GoogleAgendaApplet(plasmascript.Applet):
         """
         rv = []
         for url in self.urls:
+            if len(url.strip()) == 0:
+                continue
             try:
-                fical = urllib2.urlopen(url)
+                fical = urllib2.urlopen(url.strip())
                 for event in Calendar.from_string(fical.read()).walk():
                     if type(event) is Event:
                         dt = None
@@ -176,6 +178,7 @@ class GoogleAgendaApplet(plasmascript.Applet):
         """
         Called by timer every self.interval minutes
         """
+        print "timer"
         self.fetchData()
         self.displayData()
         self.update()
