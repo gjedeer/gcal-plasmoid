@@ -8,9 +8,12 @@ This is a plasmoid written in Python
 plasma-scriptengine-python, python-kde4, python-qt4 - all of them present in kubuntu out of the box
 
 # How to install
- wget -O - http://gdr.geekhood.net/gdrwpl/heavy/gcal-plasmoid-bootstrap.sh | sh -s
+`wget -O - http://gdr.geekhood.net/gdrwpl/heavy/gcal-plasmoid-bootstrap.sh | sh -s`
 
 GUI installation of python plasmoids doesn't work at the moment.
 
 # How to use
-http://www.youtube.com/watch?v=gLf5zpCgnWE
+[Youtube][http://www.youtube.com/watch?v=gLf5zpCgnWE]
+
+# KDE-look.org
+[KDE-look.org][http://kde-look.org/content/show.php?content=134032]

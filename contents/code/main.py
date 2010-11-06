@@ -116,6 +116,9 @@ class GoogleAgendaApplet(plasmascript.Applet):
             except urllib2.HTTPError, e:
                 self.error = str(e)
                 print self.error
+            except ValueError: # when URL is malformed
+                self.error = str(e)
+                print self.error
 
         rv.sort(key=lambda row: row['dt'])
         self.items = rv
