@@ -13,7 +13,7 @@ plasma-scriptengine-python, python-kde4, python-qt4 - all of them present in kub
 GUI installation of python plasmoids doesn't work at the moment.
 
 # How to use
-[Youtube][http://www.youtube.com/watch?v=gLf5zpCgnWE]
+[Youtube](http://www.youtube.com/watch?v=gLf5zpCgnWE)
 
 # KDE-look.org
-[KDE-look.org][http://kde-look.org/content/show.php?content=134032]
+[KDE-look.org](http://kde-look.org/content/show.php?content=134032)
