@@ -119,7 +119,7 @@ class GoogleAgendaApplet(plasmascript.Applet):
             if len(url.strip()) == 0:
                 continue
 
-            job = KIO.storedGet(KUrl(url.strip()))
+            job = KIO.storedGet(KUrl(url.strip()), KIO.Reload, KIO.HideProgressInfo)
             QObject.connect(job, SIGNAL("result(KJob*)"), self.jobFinished)
             self.jobs.add(job)
 
