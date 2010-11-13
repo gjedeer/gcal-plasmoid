@@ -5,10 +5,13 @@ from PyQt4.QtGui import *
 from PyQt4 import uic
 from PyKDE4.plasma import Plasma
 from PyKDE4 import plasmascript
-from PyKDE4.kdecore import KConfig, KConfigGroup
+from PyKDE4.kdecore import *
+from PyKDE4.kio import *
 
 import urllib2
 import datetime
+import os.path
+import os
 
 from icalendar import Calendar, Event
 from localtz import LocalTimezone
@@ -26,11 +29,14 @@ class GoogleAgendaApplet(plasmascript.Applet):
         self.max_events = 10
         # iCal calendar URLs
         self.urls = []
+        # KDE jobs - to make sure they won't be garbage collected
+        self.jobs = set()
  
     def init(self):
         """
         Called by Plasma upon initialization
         """
+        self.initDataDir()
         self.general_config = self.config("General")
         self.fromGeneralConfig()
         self.resize(200, 200)
@@ -44,6 +50,17 @@ class GoogleAgendaApplet(plasmascript.Applet):
 
         self.displayData()
 
+    def getDataPath(self, *parts):
+        main_dir = str(KStandardDirs.locateLocal("data", "gcal-agenda"))
+        dirs = [main_dir] + list(parts)
+        return os.path.join(*dirs)
+
+    def initDataDir(self):
+        path = self.getDataPath()
+
+        if not os.path.exists(path):
+            os.mkdir(path, 0700)
+
     def configChanged(self):
         """
         Config has been changed - refresh display
@@ -51,6 +68,7 @@ class GoogleAgendaApplet(plasmascript.Applet):
         """
         self.fromGeneralConfig()
         plasmascript.Applet.configChanged(self)
+        self.fetchData()
         self.displayData()
         self.update()
 
@@ -81,47 +99,62 @@ class GoogleAgendaApplet(plasmascript.Applet):
         for url in self.urls:
             if len(url.strip()) == 0:
                 continue
-            try:
-                fical = urllib2.urlopen(url.strip())
-                for event in Calendar.from_string(fical.read()).walk():
-                    if type(event) is Event:
-                        dt = None
-                        add = False
-                        if type(event['DTSTART'].dt) is datetime.date:
-                                dt = datetime.datetime.combine(event['DTSTART'].dt, datetime.time.min)
-                                dt = dt.replace(tzinfo=LocalTimezone())
-                                date = event['DTSTART'].dt
-                                time = None
 
-                        if type(event['DTSTART'].dt) is datetime.datetime:
-                                dt = event['DTSTART'].dt
-                                if dt.tzname():
-                                    dt = dt.astimezone(LocalTimezone())
-                                else:
-                                    dt = dt.replace(tzinfo=LocalTimezone())
-                                date = dt.date()
-                                time = dt.timetz()
+            job = KIO.storedGet(KUrl(url.strip()))
+            QObject.connect(job, SIGNAL("result(KJob*)"), self.jobFinished)
+            self.jobs.add(job)
 
-                        if date >= datetime.date.today():
-                            rv.append({
-                                'dt': dt,
-                                'date': date,
-                                'time': time,
-                                'summary': unicode(event['SUMMARY']),
-                            })
-                            
-                self.error = None
-                            
-            except urllib2.HTTPError, e:
-                self.error = str(e)
-                print self.error
-            except ValueError: # when URL is malformed
-                self.error = str(e)
-                print self.error
+    def jobFinished(self, job):
+        """
+        Callback of KIO network handler
+        """
+        if job.error():
+            print "JOB FOR URL %s RETURNED ERROR!" % str(job.url())
+            return
+        url = str(job.url())
+        data = str(job.data())
+        self.parseFile(url, data)
+        self.displayData()
+        self.update()
+        self.jobs.remove(job)
 
-        rv.sort(key=lambda row: row['dt'])
-        self.items = rv
-                    
+    def parseFile(self, url, contents):
+        """
+        Parse the file and place it in self.items
+        contents may come stright from network callback (jobFinished) or cache
+        """
+        self.items = [item for item in self.items if not item['url'] == url]
+        rv = []
+        for event in Calendar.from_string(contents).walk():
+            if type(event) is Event:
+                dt = None
+                add = False
+                if type(event['DTSTART'].dt) is datetime.date:
+                        dt = datetime.datetime.combine(event['DTSTART'].dt, datetime.time.min)
+                        dt = dt.replace(tzinfo=LocalTimezone())
+                        date = event['DTSTART'].dt
+                        time = None
+
+                if type(event['DTSTART'].dt) is datetime.datetime:
+                        dt = event['DTSTART'].dt
+                        if dt.tzname():
+                            dt = dt.astimezone(LocalTimezone())
+                        else:
+                            dt = dt.replace(tzinfo=LocalTimezone())
+                        date = dt.date()
+                        time = dt.timetz()
+
+                if date >= datetime.date.today():
+                    rv.append({
+                        'dt': dt,
+                        'date': date,
+                        'time': time,
+                        'summary': unicode(event['SUMMARY']),
+                        'url': url,
+                    })
+        self.items += rv
+        self.items.sort(key=lambda row: row['dt'])
+
     def displayData(self):
         """
         Display data from self.items on screen
