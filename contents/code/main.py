@@ -152,7 +152,8 @@ class GoogleAgendaApplet(plasmascript.Applet):
             if item['date'] != last_date:
                 # Insert date header
                 last_date = item['date']
-                strDate = item['date'].strftime('%d %B %Y')
+                qDate = QDate(item['date'].year, item['date'].month, item['date'].day)
+                strDate = qDate.toString('d MMMM yyyy')
                 dateLabel = Plasma.Label(self.applet)
                 dateLabel.setText(strDate)
                 dateLabel.setAlignment(Qt.AlignCenter)
