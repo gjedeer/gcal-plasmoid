@@ -32,7 +32,6 @@ class GoogleAgendaApplet(plasmascript.Applet):
         Called by Plasma upon initialization
         """
         self.general_config = self.config("General")
-#        self.toGeneralConfig()
         self.fromGeneralConfig()
         self.resize(200, 200)
         self.setAspectRatioMode(Plasma.IgnoreAspectRatio)
