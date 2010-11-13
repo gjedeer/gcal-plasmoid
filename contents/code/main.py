@@ -12,6 +12,7 @@ import urllib2
 import datetime
 import os.path
 import os
+import hashlib
 
 from icalendar import Calendar, Event
 from localtz import LocalTimezone
@@ -43,6 +44,8 @@ class GoogleAgendaApplet(plasmascript.Applet):
         self.setAspectRatioMode(Plasma.IgnoreAspectRatio)
         self.setHasConfigurationInterface(True)
         self.fetchData()
+
+        self.fromCache()
 
         # in miliseconds
         self.startTimer(1000 * 60 * self.interval)
@@ -90,6 +93,18 @@ class GoogleAgendaApplet(plasmascript.Applet):
         self.general_config.writeEntry("urls", qurls)
         
 
+    def fromCache(self):
+        for url in self.urls:
+            if len(url.strip()) == 0:
+                continue
+
+            hashed_url = hashlib.sha224(url).hexdigest()
+            fname = self.getDataPath(hashed_url)
+            try:
+                self.parseFile(url, open(fname).read())
+            except IOError:
+                pass
+
     def fetchData(self):
         """
         Fetch data from ical files, parse them and insert into self.items
@@ -111,12 +126,21 @@ class GoogleAgendaApplet(plasmascript.Applet):
         if job.error():
             print "JOB FOR URL %s RETURNED ERROR!" % str(job.url())
             return
-        url = str(job.url())
+        url = str(job.url().url())
         data = str(job.data())
+
         self.parseFile(url, data)
         self.displayData()
         self.update()
+
+        # Let the garbage collector do its job
         self.jobs.remove(job)
+
+        # Write job to cache
+        hashed_url = hashlib.sha224(url).hexdigest()
+        fname = self.getDataPath(hashed_url)
+        open(fname, 'w').write(data)
+
 
     def parseFile(self, url, contents):
         """
