@@ -19,5 +19,9 @@
       <default>10</default>
       <min>0</min>
     </entry>
+	<entry name="cache_ical" type="Bool">
+	  <label>Cache files for offline use</label>
+	  <default>True</default>
+  </entry>
   </group>
 </kcfg>

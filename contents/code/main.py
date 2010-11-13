@@ -32,6 +32,8 @@ class GoogleAgendaApplet(plasmascript.Applet):
         self.urls = []
         # KDE jobs - to make sure they won't be garbage collected
         self.jobs = set()
+        # Whether to cache downloaded ical files
+        self.cache_ical = True
  
     def init(self):
         """
@@ -83,6 +85,8 @@ class GoogleAgendaApplet(plasmascript.Applet):
         self.max_events, success = self.general_config.readEntry("max_events", 10).toInt()
         qurls = self.general_config.readEntry("urls", QStringList(QString("http://www.mozilla.org/projects/calendar/caldata/PolishHolidays.ics"))).toStringList()
         self.urls = [str(x) for x in qurls]
+        self.cache_ical = self.general_config.readEntry("cache_ical", True).toBool()
+        print "CAHCE ICAL", self.cache_ical
 
 #unused
     def toGeneralConfig(self):
@@ -99,7 +103,7 @@ class GoogleAgendaApplet(plasmascript.Applet):
                 continue
 
             hashed_url = hashlib.sha224(url).hexdigest()
-            fname = self.getDataPath(hashed_url)
+            fname = self.getDataPath(hashed_url) + ".ical"
             try:
                 self.parseFile(url, open(fname).read())
             except IOError:
@@ -137,9 +141,10 @@ class GoogleAgendaApplet(plasmascript.Applet):
         self.jobs.remove(job)
 
         # Write job to cache
-        hashed_url = hashlib.sha224(url).hexdigest()
-        fname = self.getDataPath(hashed_url)
-        open(fname, 'w').write(data)
+        if self.cache_ical:
+            hashed_url = hashlib.sha224(url).hexdigest()
+            fname = self.getDataPath(hashed_url) + ".ical"
+            open(fname, 'w').write(data)
 
 
     def parseFile(self, url, contents):
