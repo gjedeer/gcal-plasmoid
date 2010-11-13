@@ -5,7 +5,7 @@ Type=Service
 ServiceTypes=Plasma/Applet
 X-Plasma-API=python
 X-Plasma-MainScript=code/main.py
-Icon=applications
+Icon=gcal.png
 
 X-KDE-PluginInfo-Author=GDR!
 X-KDE-PluginInfo-Email=gdr@go2.pl
