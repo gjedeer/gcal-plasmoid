@@ -54,7 +54,6 @@ class GoogleAgendaApplet(plasmascript.Applet):
         self.startTimer(1000 * 60 * self.interval)
         self.list = None
 
-	print kdelibs_present
         self.displayData()
 
     def getDataPath(self, *parts):
@@ -196,6 +195,24 @@ class GoogleAgendaApplet(plasmascript.Applet):
         if oldlist:
             del oldlist
 
+        # Display warning when kdelibs5-dev is missing
+        if not kdelibs_present:
+            for text in ('ERROR', 'package "kdelibs5-dev"', 'is missing', 'settings will be', 'broken'):
+                label = Plasma.Label(self.applet)
+                label.setText(text)
+                label.setAlignment(Qt.AlignCenter)
+                label.setStyleSheet("""
+                            font-weight: 700;
+                            color: red;
+                            """)
+                self.list.addItem(label)
+            tooltip = Plasma.ToolTipContent()
+            tooltip.setMainText('Your system is missing a package')
+            tooltip.setSubText('A library "kdewidgets.so" has not been found on your system. This library is usually found in a package called "kdelibs-dev" which can be installed using a package manager in your system.\nIf you don\'t install it, plasmoid settings will fail to work properly')
+            tooltip.setAutohide(False)
+            Plasma.ToolTipManager.self().setContent(self.applet, tooltip)
+            Plasma.ToolTipManager.self().registerWidget(self.applet)
+
         # Holds last event date so we know when to insert date header
         last_date = None
         # Counter of displayed events
@@ -214,6 +231,7 @@ class GoogleAgendaApplet(plasmascript.Applet):
                                         font-weight: 700;
                                         color: blue;
                                         """)
+
                 self.list.addItem(dateLabel)
 
             # Prepare label with event text
