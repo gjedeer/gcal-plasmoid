@@ -16,6 +16,7 @@ import hashlib
 
 from icalendar import Calendar, Event
 from localtz import LocalTimezone
+from kdelibsdetector import kdelibs_present
 
 items = []
 
@@ -53,6 +54,7 @@ class GoogleAgendaApplet(plasmascript.Applet):
         self.startTimer(1000 * 60 * self.interval)
         self.list = None
 
+	print kdelibs_present
         self.displayData()
 
     def getDataPath(self, *parts):
@@ -86,16 +88,6 @@ class GoogleAgendaApplet(plasmascript.Applet):
         qurls = self.general_config.readEntry("urls", QStringList(QString("http://www.mozilla.org/projects/calendar/caldata/PolishHolidays.ics"))).toStringList()
         self.urls = [str(x) for x in qurls]
         self.cache_ical = self.general_config.readEntry("cache_ical", True).toBool()
-        print "CAHCE ICAL", self.cache_ical
-
-#unused
-    def toGeneralConfig(self):
-        qurls = QStringList()
-        for url in self.urls:
-            qurls.append(QString(url))
-
-        self.general_config.writeEntry("urls", qurls)
-        
 
     def fromCache(self):
         for url in self.urls:
