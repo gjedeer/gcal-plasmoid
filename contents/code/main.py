@@ -164,14 +164,34 @@ class GoogleAgendaApplet(plasmascript.Applet):
                         date = dt.date()
                         time = dt.timetz()
 
-                if date >= datetime.date.today():
-                    rv.append({
-                        'dt': dt,
-                        'date': date,
-                        'time': time,
-                        'summary': unicode(event['SUMMARY']),
-                        'url': url,
-                    })
+                date = [date]
+                dt = [dt]
+                if 'RRULE' in event:
+                    # deal with repeated events
+                    rrule = event['RRULE']
+                    print rrule
+                    if 'COUNT' in rrule:
+                        rep_count = rrule['COUNT'][0]
+                        # add a hard cut off to the number of reps
+                        if rep_count > 100: rep_count = 100
+                        # sort out how often it is repeated
+                        #     # deal with once weekly, because that is what I care about
+                        if 'WEEKLY' in rrule['FREQ'] and len( rrule['BYDAY'])==1:
+                            ddelta = datetime.timedelta(days=7)
+                            for j in range(1,rep_count):
+                                tmp_date =  date[0] + ddelta*j                              
+                                date.append(tmp_date)
+                                dt.append(datetime.datetime.combine(tmp_date,time))
+                                
+                for (d,dt_) in zip(date,dt):
+                    if d >= datetime.date.today():
+                        rv.append({
+                            'dt': dt_,
+                            'date': d,
+                            'time': time,
+                            'summary': unicode(event['SUMMARY']),
+                            'url': url,
+                        })
         self.items += rv
         self.items.sort(key=lambda row: row['dt'])
 
