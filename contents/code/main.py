@@ -202,7 +202,7 @@ class GoogleAgendaApplet(plasmascript.Applet):
                     byyearday = helper(e_rrule,'BYYEARDAY')
                     byeaster = helper(e_rrule,'BYEASTER')
                     byweekno = helper(e_rrule,'BYWEEKNO')
-                    byweekday = helper(e_rrule,'BYWEEKDAY')
+                    byweekday = helper(e_rrule,'BYDAY')
                     if byweekday is not None:
                         byweekday = [day_dict[bwd] for bwd in byweekday]
                     byhour = helper(e_rrule,'BYHOUR')
