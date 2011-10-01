@@ -89,6 +89,7 @@ class GoogleAgendaApplet(plasmascript.Applet):
         self.urls = [str(x) for x in qurls]
         self.cache_ical = self.general_config.readEntry("cache_ical", True).toBool()
 
+
     def fromCache(self):
         for url in self.urls:
             if len(url.strip()) == 0:
@@ -231,8 +232,15 @@ class GoogleAgendaApplet(plasmascript.Applet):
                     date = [rr.date() for rr in rrule_list]
                     dt= [rr for rr in rrule_list]
                     time= [rr.timetz() for rr in rrule_list]
+
                 
                 
+
+                loc = ''
+                if 'LOCATION' in event and not event['LOCATION'] =='' :
+                    loc = 'Location: '
+                    loc += event['LOCATION']
+
                 for (d_,dt_,t_) in zip(date,dt,time):
                     if d_ >= datetime.date.today():
                         rv.append({
@@ -241,6 +249,7 @@ class GoogleAgendaApplet(plasmascript.Applet):
                             'time': time,
                             'summary': unicode(event['SUMMARY']),
                             'url': url,
+                            'loc':loc
                         })
         self.items += rv
         self.items.sort(key=lambda row: row['dt'])
@@ -312,6 +321,8 @@ class GoogleAgendaApplet(plasmascript.Applet):
             summary += item['summary']
             summaryLabel = Plasma.Label(self.applet)
             summaryLabel.setText(summary)
+            summaryLabel.setToolTip(item['loc'])
+
             self.list.addItem(summaryLabel)
 
             num_events += 1
