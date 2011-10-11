@@ -18,6 +18,7 @@ from icalendar import Calendar, Event
 from localtz import LocalTimezone
 from kdelibsdetector import kdelibs_present
 
+from dateutil import rrule
 items = []
 
 class GoogleAgendaApplet(plasmascript.Applet):
@@ -145,6 +146,15 @@ class GoogleAgendaApplet(plasmascript.Applet):
         """
         self.items = [item for item in self.items if not item['url'] == url]
         rv = []
+
+        def helper(E,f):
+            if f in E:
+                return E[f]
+            else:
+                return None
+        freq_dict = dict(zip(("YEARLY", "MONTHLY", "WEEKLY", "DAILY",
+           "HOURLY", "MINUTELY", "SECONDLY"),range(7)))
+        day_dict = dict(zip(("MO", "TU", "WE", "TH", "FR", "SA", "SU"),range(7)))
         for event in Calendar.from_string(contents).walk():
             if type(event) is Event:
                 dt = None
@@ -164,14 +174,72 @@ class GoogleAgendaApplet(plasmascript.Applet):
                         date = dt.date()
                         time = dt.timetz()
 
-                if date >= datetime.date.today():
-                    rv.append({
-                        'dt': dt,
-                        'date': date,
-                        'time': time,
-                        'summary': unicode(event['SUMMARY']),
-                        'url': url,
-                    })
+                    
+                dt = [dt]
+                date = [date]
+                time = [time]
+                if 'RRULE' in event:
+                    # deal with repeated events
+                    e_rrule = event['RRULE']
+                    
+                    freq = freq_dict[e_rrule['FREQ'][0]]
+                    
+                    dtstart = dt[0]
+                    interval = helper(e_rrule,'INTERVAL')
+                    if interval is None:
+                        interval = 1
+                    wkst = helper(e_rrule,'WKST')
+                    count = helper(e_rrule,'COUNT')
+                    if count is not None:
+                        count = count[0]
+                    until = helper(e_rrule,'UNTIL')
+                    if until is not None:
+                        until =until[0]
+                        until = until.astimezone(LocalTimezone())
+                    bysetpos = helper(e_rrule,'BYSETPOS')
+                    bymonth = helper(e_rrule,'BYMONTH')
+                    bymonthday = helper(e_rrule,'BYMONTHDAY')
+                    byyearday = helper(e_rrule,'BYYEARDAY')
+                    byeaster = helper(e_rrule,'BYEASTER')
+                    byweekno = helper(e_rrule,'BYWEEKNO')
+                    byweekday = helper(e_rrule,'BYDAY')
+                    if byweekday is not None:
+                        byweekday = [day_dict[bwd] for bwd in byweekday]
+                    byhour = helper(e_rrule,'BYHOUR')
+                    byminute = helper(e_rrule,'BYMINUTE')
+                    bysecond = helper(e_rrule,'BYSECOND')
+                    
+                    rrule_list = list(rrule.rrule(freq,
+                                            dtstart=dtstart,
+                                            interval=interval,
+                                            wkst=wkst,
+                                            count=count,
+                                            until=until,
+                                            bysetpos=bysetpos,
+                                            bymonth=bymonth,
+                                            bymonthday=bymonthday,
+                                            byyearday=byyearday,
+                                            byeaster=byeaster,
+                                            byweekno=byweekno,
+                                            byweekday=byweekday,
+                                            byhour=byhour,
+                                            byminute=byminute,
+                                            bysecond=bysecond))
+                    
+                    date = [rr.date() for rr in rrule_list]
+                    dt= [rr for rr in rrule_list]
+                    time= [rr.timetz() for rr in rrule_list]
+                
+                
+                for (d_,dt_,t_) in zip(date,dt,time):
+                    if d_ >= datetime.date.today():
+                        rv.append({
+                            'dt': dt_,
+                            'date': d_,
+                            'time': time,
+                            'summary': unicode(event['SUMMARY']),
+                            'url': url,
+                        })
         self.items += rv
         self.items.sort(key=lambda row: row['dt'])
 
