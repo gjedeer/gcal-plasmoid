@@ -189,6 +189,8 @@ class GoogleAgendaApplet(plasmascript.Applet):
                     if interval is None:
                         interval = 1
                     wkst = helper(e_rrule,'WKST')
+                    if wkst is not None:
+                        wkst = day_dict[wkst[0]]
                     count = helper(e_rrule,'COUNT')
                     if count is not None:
                         count = count[0]
