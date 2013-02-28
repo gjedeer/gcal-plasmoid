@@ -13,15 +13,18 @@ import os.path
 import os
 import hashlib
 
+import sys
+
 from icalendar import Calendar, Event
 from localtz import LocalTimezone
 from kdelibsdetector import kdelibs_present
 
-from dateutil import rrule
+from dateutil import rrule, tz
 items = []
 
 class GoogleAgendaApplet(plasmascript.Applet):
     def __init__(self,parent,args=None):
+        print sys._getframe().f_code.co_name
         plasmascript.Applet.__init__(self,parent)
         # List of all events sorted by date, populated in fetchData()
         self.items = []
@@ -40,6 +43,7 @@ class GoogleAgendaApplet(plasmascript.Applet):
         """
         Called by Plasma upon initialization
         """
+        print sys._getframe().f_code.co_name
         self.initDataDir()
         self.general_config = self.config("General")
         self.fromGeneralConfig()
@@ -57,11 +61,13 @@ class GoogleAgendaApplet(plasmascript.Applet):
         self.displayData()
 
     def getDataPath(self, *parts):
+        print sys._getframe().f_code.co_name
         main_dir = str(KStandardDirs.locateLocal("data", "gcal-agenda"))
         dirs = [main_dir] + list(parts)
         return os.path.join(*dirs)
 
     def initDataDir(self):
+        print sys._getframe().f_code.co_name
         path = self.getDataPath()
 
         if not os.path.exists(path):
@@ -72,6 +78,7 @@ class GoogleAgendaApplet(plasmascript.Applet):
         Config has been changed - refresh display
         Inherited from plasmascript.Applet
         """
+        print sys._getframe().f_code.co_name
         self.fromGeneralConfig()
         plasmascript.Applet.configChanged(self)
         self.fetchData()
@@ -82,6 +89,7 @@ class GoogleAgendaApplet(plasmascript.Applet):
         """
         Get values from plasma config and store in properties
         """
+        print sys._getframe().f_code.co_name
         self.interval, success = self.general_config.readEntry("interval", 1).toInt()
         self.max_events, success = self.general_config.readEntry("max_events", 10).toInt()
         qurls = self.general_config.readEntry("urls", QStringList(QString("http://www.mozilla.org/projects/calendar/caldata/PolishHolidays.ics"))).toStringList()
@@ -90,6 +98,7 @@ class GoogleAgendaApplet(plasmascript.Applet):
 
 
     def fromCache(self):
+        print sys._getframe().f_code.co_name
         for url in self.urls:
             if len(url.strip()) == 0:
                 continue
@@ -106,6 +115,7 @@ class GoogleAgendaApplet(plasmascript.Applet):
         Fetch data from ical files, parse them and insert into self.items
         On communication error, sets self.error
         """
+        print sys._getframe().f_code.co_name
         rv = []
         for url in self.urls:
             if len(url.strip()) == 0:
@@ -119,6 +129,7 @@ class GoogleAgendaApplet(plasmascript.Applet):
         """
         Callback of KIO network handler
         """
+        print sys._getframe().f_code.co_name
         if job.error():
             print "JOB FOR URL %s RETURNED ERROR!" % str(job.url())
             return
@@ -144,6 +155,7 @@ class GoogleAgendaApplet(plasmascript.Applet):
         Parse the file and place it in self.items
         contents may come stright from network callback (jobFinished) or cache
         """
+        print sys._getframe().f_code.co_name
         self.items = [item for item in self.items if not item['url'] == url]
         rv = []
 
@@ -226,7 +238,11 @@ class GoogleAgendaApplet(plasmascript.Applet):
                                             byweekday=byweekday,
                                             byhour=byhour,
                                             byminute=byminute,
-                                            bysecond=bysecond))
+                                            bysecond=bysecond).between(
+                                                datetime.datetime.now(tz=tz.tzlocal()),
+                                                datetime.datetime.now(tz=tz.tzlocal()) + datetime.timedelta(days=365),
+                                                inc=True
+                                            ))
                     
                     date = [rr.date() for rr in rrule_list]
                     dt= [rr for rr in rrule_list]
@@ -258,6 +274,7 @@ class GoogleAgendaApplet(plasmascript.Applet):
         Display data from self.items on screen
         """
 
+        print sys._getframe().f_code.co_name
         # Remove old labels from layout
         oldlist = None
         if self.list:
@@ -273,8 +290,8 @@ class GoogleAgendaApplet(plasmascript.Applet):
         if oldlist:
             del oldlist
 
-        # Display warning when kdelibs5-dev is missing
-        if not kdelibs_present:
+        # Don't display warning when kdelibs5-dev is missing
+        if False and not kdelibs_present:
             for text in ('ERROR', 'package "kdelibs5-dev"', 'or "kdelibs5-plugins"', 'is missing', 'settings will be', 'broken'):
                 label = Plasma.Label(self.applet)
                 label.setText(text)
