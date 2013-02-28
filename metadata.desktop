@@ -8,7 +8,7 @@ X-Plasma-MainScript=code/main.py
 Icon=gcal.png
 
 X-KDE-PluginInfo-Author=GDR!
-X-KDE-PluginInfo-Email=gdr@go2.pl
+X-KDE-PluginInfo-Email=gdr@gdr.name
 X-KDE-PluginInfo-Name=gcal-plasmoid
 X-KDE-PluginInfo-Version=0.23
 X-KDE-PluginInfo-Website=http://github.com/gjedeer/gcal-plasmoid
