@@ -8,7 +8,6 @@ from PyKDE4 import plasmascript
 from PyKDE4.kdecore import *
 from PyKDE4.kio import *
 
-import urllib2
 import datetime
 import os.path
 import os
@@ -276,7 +275,7 @@ class GoogleAgendaApplet(plasmascript.Applet):
 
         # Display warning when kdelibs5-dev is missing
         if not kdelibs_present:
-            for text in ('ERROR', 'package "kdelibs5-dev"', 'is missing', 'settings will be', 'broken'):
+            for text in ('ERROR', 'package "kdelibs5-dev"', 'or "kdelibs5-plugins"', 'is missing', 'settings will be', 'broken'):
                 label = Plasma.Label(self.applet)
                 label.setText(text)
                 label.setAlignment(Qt.AlignCenter)
@@ -287,7 +286,7 @@ class GoogleAgendaApplet(plasmascript.Applet):
                 self.list.addItem(label)
             tooltip = Plasma.ToolTipContent()
             tooltip.setMainText('Your system is missing a package')
-            tooltip.setSubText('A library "kdewidgets.so" has not been found on your system. This library is usually found in a package called "kdelibs-dev" which can be installed using a package manager in your system.\nIf you don\'t install it, plasmoid settings will fail to work properly')
+            tooltip.setSubText('A library "kdewidgets.so" has not been found on your system. This library is usually found in a package called "kdelibs5-plugins" or "kdelibs-dev" which can be installed using a package manager in your system.\nIf you don\'t install it, plasmoid settings will fail to work properly')
             tooltip.setAutohide(False)
             Plasma.ToolTipManager.self().setContent(self.applet, tooltip)
             Plasma.ToolTipManager.self().registerWidget(self.applet)
